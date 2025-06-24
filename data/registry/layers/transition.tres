@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="LayerEntry" load_steps=2 format=3 uid="uid://bt55bdvy2tw3j"]
+
+[ext_resource type="Script" uid="uid://bm1rx04nc3pis" path="res://core/definitions/layer_entry.gd" id="1_cns2l"]
+
+[resource]
+script = ExtResource("1_cns2l")
+name = "Transition"
+layer = 100
+metadata/_custom_type_script = "uid://bm1rx04nc3pis"

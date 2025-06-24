@@ -1,0 +1,27 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Qux"
+run/main_scene="uid://eorl60j50wro"
+config/features=PackedStringArray("4.4", "Forward Plus")
+config/icon="res://icon.svg"
+
+[autoload]
+
+LayerManager="*res://core/managers/layer_manager.gd"
+SceneManager="*res://core/managers/scene_manager.gd"
+EventBus="*res://core/managers/event_bus.gd"
+SceneSetManager="*res://core/managers/scene_set_manager.gd"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/autoregistry/plugin.cfg")

@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="LayerEntry" load_steps=2 format=3 uid="uid://dv7wikmtcpl7u"]
+
+[ext_resource type="Script" uid="uid://bm1rx04nc3pis" path="res://core/definitions/layer_entry.gd" id="1_b0347"]
+
+[resource]
+script = ExtResource("1_b0347")
+name = "Game"
+layer = 1
+metadata/_custom_type_script = "uid://bm1rx04nc3pis"

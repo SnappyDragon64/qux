@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="LayerEntry" load_steps=2 format=3 uid="uid://iyhdit84hd44"]
+
+[ext_resource type="Script" uid="uid://bm1rx04nc3pis" path="res://core/definitions/layer_entry.gd" id="1_t4hfs"]
+
+[resource]
+script = ExtResource("1_t4hfs")
+name = "Menu"
+layer = 50
+metadata/_custom_type_script = "uid://bm1rx04nc3pis"

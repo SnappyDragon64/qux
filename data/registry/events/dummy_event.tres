@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="EventEntry" load_steps=2 format=3 uid="uid://b6us0wi62cos4"]
+
+[ext_resource type="Script" uid="uid://cl85ijuvs5gfk" path="res://core/definitions/event_entry.gd" id="1_001oq"]
+
+[resource]
+script = ExtResource("1_001oq")
+data_schema = Dictionary[String, int]({
+"flag": 1
+})
+metadata/_custom_type_script = "uid://cl85ijuvs5gfk"
