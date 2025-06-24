@@ -21,6 +21,7 @@ LayerManager="*res://core/managers/layer_manager.gd"
 SceneManager="*res://core/managers/scene_manager.gd"
 EventBus="*res://core/managers/event_bus.gd"
 SceneSetManager="*res://core/managers/scene_set_manager.gd"
+TransitionManager="*res://core/managers/transition_manager.gd"
 
 [editor_plugins]
 

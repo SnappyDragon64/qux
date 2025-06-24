@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="TransitionEntry" load_steps=2 format=3 uid="uid://clnwmviky1rv5"]
+
+[ext_resource type="Script" uid="uid://bkasf4whiowvu" path="res://core/definitions/transition_entry.gd" id="1_650xr"]
+
+[resource]
+script = ExtResource("1_650xr")
+metadata/_custom_type_script = "uid://bkasf4whiowvu"
