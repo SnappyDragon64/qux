@@ -2,6 +2,11 @@ extends Node
 
 
 func subscribe(event_entry: EventEntry, callable: Callable) -> void:
+	var signal_name = event_entry.resource_path
+	
+	if not has_signal(signal_name):
+		add_user_signal(signal_name)
+	
 	connect(event_entry.resource_path, callable)
 
 
