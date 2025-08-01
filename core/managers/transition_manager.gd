@@ -1,43 +1,34 @@
 extends Node
 
-var _loaded_transition_nodes: Dictionary[TransitionEntry, Transition] = {}
+
 var _current_transition_entry: TransitionEntry
 var _current_transition: Transition
 
 
-func _ready() -> void:
-	_load_all_transition_scenes()
+func set_current_transition(transition_entry: TransitionEntry) -> bool:
+	_current_transition = null
+	_current_transition_entry = null
 
+	if not transition_entry:
+		return true
 
-func _load_all_transition_scenes() -> void:
-	var all_transition_entries: Array[TransitionEntry] = Transitions.get_all()
-	for entry: TransitionEntry in all_transition_entries:
-		if entry.scene_entry and entry.scene_entry is SceneEntry:
-			if not SceneManager.is_scene_loaded(entry.scene_entry):
-				SceneManager.load_scene(entry.scene_entry)
-			
-			await get_tree().process_frame 
-			
-			var scene_instance = SceneManager.get_scene(entry.scene_entry)
-			if scene_instance is Transition:
-				_loaded_transition_nodes[entry] = scene_instance
-			elif scene_instance:
-				push_error("TransitionManager: Scene for TransitionEntry '%s' is not a Transition." % entry.resource_path)
-			else:
-				push_error("TransitionManager: Failed to get scene instance for TransitionEntry '%s'." % entry.resource_path)
-		else:
-			push_warning("TransitionManager: TransitionEntry '%s' has no valid SceneEntry defined." % entry.resource_path)
+	if not transition_entry.scene_entry:
+		push_error("TransitionManager: Cannot set transition. The provided TransitionEntry '%s' has no SceneEntry defined." % transition_entry.resource_path)
+		return false
 
+	if not SceneManager.is_scene_loaded(transition_entry.scene_entry):
+		push_error("TransitionManager: Cannot set transition '%s'. Its scene has not been loaded by SceneManager." % transition_entry.resource_path)
+		return false
 
-func set_current_transition(transition_entry: TransitionEntry) -> void:
+	var scene_instance = SceneManager.get_scene(transition_entry.scene_entry)
+	if not scene_instance is Transition:
+		var type_str = "null" if not scene_instance else scene_instance.get_class()
+		push_error("TransitionManager: Cannot set transition '%s'. Its scene node is a '%s', not a 'Transition'." % [transition_entry.resource_path, type_str])
+		return false
+
+	_current_transition = scene_instance
 	_current_transition_entry = transition_entry
-	if _current_transition_entry and _loaded_transition_nodes.has(_current_transition_entry):
-		_current_transition = _loaded_transition_nodes[_current_transition_entry]
-	elif _current_transition_entry:
-		push_warning("TransitionManager: TransitionEntry '%s' was not found among preloaded transitions." % _current_transition_entry.resource_path)
-		_current_transition = null
-	else:
-		_current_transition = null
+	return true
 
 
 func play_intro() -> void:

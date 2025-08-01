@@ -17,7 +17,7 @@ func _ready() -> void:
 	_action_exists_in_map = InputMap.has_action(pause_action_name)
 
 	if not _action_exists_in_map:
-		print("PauseManager: Input action '%s' not found in Input Map, falling back to Escape key. Add the action to enable remapping." % pause_action_name)
+		push_warning("PauseManager: Input action '%s' not found in Input Map, falling back to Escape key. Add the action to enable remapping." % pause_action_name)
 
 
 func _unhandled_input(event: InputEvent) -> void:
