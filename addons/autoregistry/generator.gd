@@ -5,12 +5,12 @@ extends RefCounted
 const REGISTRY_CONFIGS = [
 	{
 		"name": "Core",
-		"root_path": "res://data/registry/core/",
+		"root_path": "res://data/core/",
 		"autogen_path": "res://core/registry/"
 	},
 	{
 		"name": "Game",
-		"root_path": "res://data/registry/game/",
+		"root_path": "res://data/game/",
 		"autogen_path": "res://game/registry/"
 	}
 ]
@@ -47,15 +47,30 @@ func _cleanup_autogen_dir(autogen_path: String):
 	if not dir:
 		return
 
-	dir.list_dir_begin()
-	var file_name = dir.get_next()
-	
-	while file_name != "":
-		if not (file_name == "." or file_name == ".."):
-			dir.remove(autogen_path.path_join(file_name))
-		file_name = dir.get_next()
-	
-	dir.list_dir_end()
+	for file_name in dir.get_files():
+		dir.remove(autogen_path.path_join(file_name))
+
+
+func _collect_resources_recursively(path: String, prefix: String = "") -> Array[Dictionary]:
+	var collected_files: Array[Dictionary] = []
+	var dir = DirAccess.open(path)
+	if not dir:
+		printerr("AutoRegistry: Could not open directory for recursive scan: %s" % path)
+		return collected_files
+
+	for file_name in dir.get_files():
+		if file_name.ends_with(".tres") or file_name.ends_with(".res"):
+			var base_name = file_name.get_basename()
+			var const_name = (prefix + base_name).to_upper()
+			var resource_path = path.path_join(file_name)
+			collected_files.append({"const_name": const_name, "resource_path": resource_path})
+
+	for sub_dir_name in dir.get_directories():
+		var new_prefix = prefix + sub_dir_name + "_"
+		var sub_dir_path = path.path_join(sub_dir_name)
+		collected_files.append_array(_collect_resources_recursively(sub_dir_path, new_prefix))
+
+	return collected_files
 
 
 func _generate_registry_class(registry_class_name: String, registry_folder: String, config: Dictionary):
@@ -66,43 +81,22 @@ func _generate_registry_class(registry_class_name: String, registry_folder: Stri
 
 	var consts: Array[String] = []
 	var full_registry_path: String = config.root_path.path_join(registry_folder)
-	var dir = DirAccess.open(full_registry_path)
-	
-	if not dir:
-		return
 
-	var files = dir.get_files()
+	var all_resource_info = _collect_resources_recursively(full_registry_path)
 	
-	if files.is_empty():
-		FileAccess.open(file_path, FileAccess.WRITE).store_string(content)
-		return
-
-	var return_type := "Resource"
-	var inferred_from_first_valid_file = false
-	
-	for file_name in files:
-		if file_name.ends_with(".tres") or file_name.ends_with(".res"):
-			return_type = _infer_type_from_tres_file(full_registry_path.path_join(file_name))
-			inferred_from_first_valid_file = true
-			break
-	
-	if not inferred_from_first_valid_file and not files.is_empty():
-		push_warning("AutoRegistry: No .tres or .res files found in '%s' to infer type for registry '%s'. Defaulting to 'Resource'." % [full_registry_path, registry_class_name])
+	if all_resource_info.is_empty():
 		var file = FileAccess.open(file_path, FileAccess.WRITE)
 		if file:
 			file.store_string(content)
+		else:
+			printerr("AutoRegistry: Failed to write empty registry file: %s" % file_path)
 		return
 
-	for file_name in files:
-		if not (file_name.ends_with(".tres") or file_name.ends_with(".res")):
-			continue
-		
-		var id := file_name.get_basename()
-		var const_name := id.to_upper()
-		var resource_path := full_registry_path.path_join(file_name)
+	var return_type = _infer_type_from_tres_file(all_resource_info[0].resource_path)
 
-		content += "const %s: %s = preload(\"%s\")\n" % [const_name, return_type, resource_path]
-		consts.append(const_name)
+	for res_info in all_resource_info:
+		content += "const %s: %s = preload(\"%s\")\n" % [res_info.const_name, return_type, res_info.resource_path]
+		consts.append(res_info.const_name)
 	
 	if not consts.is_empty():
 		content += "\nstatic var ALL: Array[%s] = [%s]\n" % [return_type, (", ".join(consts))]
@@ -117,6 +111,8 @@ func _generate_registry_class(registry_class_name: String, registry_folder: Stri
 
 	if file:
 		file.store_string(content)
+	else:
+		printerr("AutoRegistry: Failed to write registry file: %s" % file_path)
 
 
 func _infer_type_from_tres_file(file_path: String) -> String:

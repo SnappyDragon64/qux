@@ -5,7 +5,7 @@
 
 class_name Events
 
-const DUMMY_EVENT: EventEntry = preload("res://data/registry/core/events/dummy_event.tres")
+const DUMMY_EVENT: EventEntry = preload("res://data/core/events/dummy_event.tres")
 
 static var ALL: Array[EventEntry] = [DUMMY_EVENT]
 

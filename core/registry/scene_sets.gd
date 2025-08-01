@@ -5,7 +5,7 @@
 
 class_name SceneSets
 
-const DEFAULT: SceneSetEntry = preload("res://data/registry/core/scene_sets/default.tres")
+const DEFAULT: SceneSetEntry = preload("res://data/core/scene_sets/default.tres")
 
 static var ALL: Array[SceneSetEntry] = [DEFAULT]
 

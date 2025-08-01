@@ -5,7 +5,7 @@
 
 class_name Transitions
 
-const DEFAULT: TransitionEntry = preload("res://data/registry/core/transitions/default.tres")
+const DEFAULT: TransitionEntry = preload("res://data/core/transitions/default.tres")
 
 static var ALL: Array[TransitionEntry] = [DEFAULT]
 

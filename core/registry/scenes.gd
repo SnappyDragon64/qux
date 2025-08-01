@@ -5,7 +5,7 @@
 
 class_name Scenes
 
-const MAIN: SceneEntry = preload("res://data/registry/core/scenes/main.tres")
+const MAIN: SceneEntry = preload("res://data/core/scenes/main.tres")
 
 static var ALL: Array[SceneEntry] = [MAIN]
 
