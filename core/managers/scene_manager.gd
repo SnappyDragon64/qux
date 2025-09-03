@@ -13,17 +13,12 @@ func load_scene(scene_entry: SceneEntry) -> LoadSceneTask:
 	return task
 
 
-func unload_scene(scene_entry: SceneEntry) -> void:
-	if not scene_entry:
-		push_error("SceneManager: Cannot unload scene. The provided SceneEntry is invalid.")
-		return
-	if not _scenes.has(scene_entry.resource_path):
-		return
-
-	var scene_instance = _scenes.get(scene_entry.resource_path)
-	if is_instance_valid(scene_instance):
-		scene_instance.queue_free()
-	_scenes.erase(scene_entry.resource_path)
+func unload_scene(scene_entry: SceneEntry) -> UnloadSceneTask:
+	var task = UnloadSceneTask.new()
+	
+	_unload_scene(task, scene_entry)
+	
+	return task
 
 
 func get_scene(scene_entry: SceneEntry) -> Node:
@@ -71,3 +66,26 @@ func _load_scene(task: LoadSceneTask) -> void:
 	task.result = scene_instance
 	task.is_complete = true
 	task.completed.emit(task.result)
+
+
+func _unload_scene(task: UnloadSceneTask, scene_entry: SceneEntry) -> void:
+	if not scene_entry:
+		push_error("SceneManager: Cannot unload scene. The provided SceneEntry is invalid.")
+		task.is_complete = true
+		task.completed.emit()
+		return
+		
+	if not _scenes.has(scene_entry.resource_path):
+		task.is_complete = true
+		task.completed.emit()
+		return
+
+	var scene_instance = _scenes.get(scene_entry.resource_path)
+	_scenes.erase(scene_entry.resource_path)
+
+	if is_instance_valid(scene_instance):
+		scene_instance.queue_free()
+		await scene_instance.tree_exited
+	
+	task.is_complete = true
+	task.completed.emit()

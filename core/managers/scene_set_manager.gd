@@ -41,8 +41,15 @@ func _execute_transition(target_set: SceneSetEntry) -> void:
 	
 	if _current_set:
 		await TransitionManager.play_intro()
+		
+		var unload_tasks: Array[UnloadSceneTask] = []
 		for scene_entry in _current_set.scenes:
-			SceneManager.unload_scene(scene_entry)
+			var unload_task: UnloadSceneTask = SceneManager.unload_scene(scene_entry)
+			unload_tasks.append(unload_task)
+		
+		for task in unload_tasks:
+			if not task.is_complete:
+				await task.completed
 	
 	var context = SceneSetContext.new()
 	context.entry = target_set
