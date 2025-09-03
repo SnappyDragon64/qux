@@ -1,131 +1,105 @@
-# Qux: A Godot 4 Game Framework Foundation
+# Qux: A Robust Framework Foundation for Godot 4
 
-## 1. Overview
+## Overview
 
-Qux is a foundational framework for Godot 4 projects, designed to promote a structured, data-driven, and scalable approach to game development. It provides a suite of robust managers, a powerful automatic resource registry system, and clear conventions for organizing game assets and logic.
+Qux is a foundational framework for Godot 4 projects, designed to promote a highly structured, data-driven, and scalable approach to game development. It is not a game, but a powerful and reusable architecture that provides a suite of robust managers and an automated resource pipeline, allowing you to focus on building your game's logic and content.
 
-## 2. Core Features
+The core philosophy is to separate data (defined as Godot `Resource` files) from the logic that operates on it (the singleton `Manager` classes). This creates a clean, maintainable, and designer-friendly workflow.
 
-### 2.1. Data-Driven Design
+## Core Philosophy
 
-The framework heavily emphasizes defining game entities and configurations as Godot `Resource` files (`.tres`). This allows for easy modification and extension of game data without deep code changes.
+1.  **Data-Driven by Default:** Scenes, layers, events, and other configurations are defined as `.tres` resource files, not hardcoded. This allows for rapid iteration and modification without changing code.
+2.  **Automation over Boilerplate:** The custom **AutoRegistry** plugin automatically scans your data directories and generates static, type-safe script classes to access your resources, eliminating the need for manual `preload()` calls and string paths.
+3.  **Decoupled via Managers:** A set of autoloaded (singleton) managers handle core functionalities like scene loading, event communication, and state transitions. This keeps your game code clean and focused on its own responsibilities.
+4.  **Clear Separation of Concerns:** The project is organized into a `core` framework and a `game` application layer, making the framework reusable across multiple projects.
 
-*   **Resource Definitions:** Custom resource types are defined in `core/definitions/`. These are simple data containers:
-	*   `EventEntry`: Defines an event, including an optional data schema for payload validation.
-	*   `LayerEntry`: Defines a named `CanvasLayer` with a specific Z-index.
-	*   `SceneEntry`: Defines a game scene by linking to its `.tscn` file and its associated `LayerEntry`.
-	*   `SceneSetEntry`: Defines a logical group of scenes (an array of `SceneEntry` resources) that should be active at the same time.
-	*   `TransitionEntry`: Defines a visual transition by linking to a `SceneEntry` that points to the transition's scene.
-*   **Data Location:** These resource instances are typically stored in `data/core/` for framework-level entities and `data/game/` for game-specific entities.
+---
 
-### 2.2. AutoRegistry System
+## Key Features
 
-The AutoRegistry system is an editor plugin (`addons/autoregistry/`) that automates the creation of static GDScript classes providing preloaded access to all defined resources.
+### 1. The AutoRegistry System
 
-*   **Functionality:**
-	*   **Recursive Scanning:** The generator **recursively scans** predefined directories (e.g., `res://data/core/scenes/`). This allows you to organize your resource files into any nested subdirectory structure you want.
-	*   For each top-level data folder (e.g., `events`, `scenes`), it generates a corresponding GDScript class (e.g., `Events.gd`, `Scenes.gd`).
-	*   **Descriptive Naming:** It generates `const` members where the name is derived from the resource's full path. A file at `scenes/levels/world_1/hub.tres` will become `Scenes.LEVELS_WORLD_1_HUB`.
-	*   The type of the constant is inferred from the first resource found in the directory tree. **All resources within a given tree (e.g., `scenes`) must be of the same type.**
-	*   Each generated class also includes a static `ALL` array and a `get_all()` method to easily access all resources of that type.
-*   **Generated Output:**
-	*   For the "Core" registry configuration (`data/core/`), files are generated in `core/registry/`.
-	*   For the "Game" registry configuration (`data/game/`), files are generated in `game/registry/`.
-*   **Benefits:**
-	*   **Organizational Freedom:** Structure your data files in logical subdirectories.
-	*   **Type Safety & Discoverability:** Access resources through typed, autocompletable constants (e.g., `Scenes.UI_MAIN_MENU`).
-	*   **Performance:** Resources are preloaded, avoiding runtime `load()` overhead.
-	*   **Maintainability:** The generator automatically updates references when files are moved or renamed.
-*   **Automatic Regeneration:** The plugin monitors the filesystem for changes and automatically regenerates registries with a debounce timer.
+The heart of the framework's workflow is a powerful editor plugin that automates resource management.
 
-### 2.3. Manager Singletons (Autoloads)
+*   **How it Works:** The plugin monitors the `data/` directory for changes. When you create, delete, or move a resource file, it automatically regenerates GDScript "registry" classes in the `core/registry/` and `game/registry/` directories.
+*   **Static & Type-Safe Access:** Instead of writing `preload("res://data/core/scenes/ui/main_menu.tres")`, you can simply use `Scenes.UI_MAIN_MENU`. This provides compile-time safety and autocompletion in the editor.
+*   **Recursive & Organized:** You can organize your resource files into any nested subdirectory structure within the `data/` folders. The generator will create a descriptive constant name from the file's path. For example, a resource at `data/game/levels/world_1/hub.tres` becomes `Levels.WORLD_1_HUB`.
+*   **Automatic Updates:** Renaming or moving a file in the Godot editor will trigger the generator to update the registry, so your code references will not break.
 
-A set of singleton managers, configured as autoloads in `project.godot`, provide the core runtime logic for the framework.
+### 2. Manager Singletons (Autoloads)
 
-*   **`LayerManager` (`core/managers/layer_manager.gd`):**
-	*   Responsible for creating and managing `CanvasLayer` nodes based on `LayerEntry` resources.
-	*   Provides a `get_layer(layer_entry: LayerEntry)` method to retrieve a specific `CanvasLayer`.
+A suite of singleton managers provide the core runtime logic for the framework.
 
-*   **`SceneManager` (`core/managers/scene_manager.gd`):**
-	*   The low-level authority for the lifecycle of individual scenes. It handles loading, unloading, and tracking all scene instances.
-	*   **Asynchronous API:** The manager provides a robust, non-blocking API for loading scenes.
-	*   `load_scene(scene_entry: SceneEntry) -> Callable`: **This is the primary loading function.** It initiates the loading process and **immediately returns a `Callable` object**, which represents the in-progress task. It does *not* return the scene node directly. To get the scene node, you must `await` the returned Callable.
-	*   `load_scene_deferred(scene_entry: SceneEntry) -> void`: A "fire-and-forget" method that starts the loading process in the background. Use this for pre-loading non-critical scenes.
-	*   `unload_scene(scene_entry: SceneEntry)`: Safely removes and frees the instance of the specified scene.
-	*   `get_scene(scene_entry: SceneEntry)`: Retrieves the root node of an already loaded scene.
-	*   `is_scene_loaded(scene_entry: SceneEntry)`: Checks if a scene is currently tracked as loaded.
+*   **`LayerManager`**: Automatically creates and manages `CanvasLayer` nodes based on `LayerEntry` resources. This provides a structured and data-driven system for render order (e.g., Game, UI, Transitions).
 
-*   **`EventBus` (`core/managers/event_bus.gd`):**
-	*   A global event system for decoupled communication between different parts of the application.
-	*   It dynamically creates signals based on `EventEntry` resources and can validate event data against a defined schema.
-	*   `subscribe(event_entry, callable)`, `unsubscribe(event_entry, callable)`, `publish(event_entry, data)`, `wait_for(event_entry)`.
+*   **`SceneManager`**: The low-level authority for loading and unloading individual scenes.
+    *   **Asynchronous API:** Scene loading is handled via task objects to prevent the game from freezing.
+    *   `load_scene(scene_entry: SceneEntry) -> LoadSceneTask`: Initiates loading and returns a `LoadSceneTask` object. To get the result, you `await` the task's `completed` signal: `var scene_node = await task.completed`.
+    *   `unload_scene(scene_entry: SceneEntry) -> UnloadSceneTask`: Safely removes and frees a scene instance.
+    *   `get_scene(scene_entry: SceneEntry)`: Retrieves the root node of an already-loaded scene.
 
-*   **`SceneSetManager` (`core/managers/scene_set_manager.gd`):**
-	*   The high-level orchestrator for managing game states. It operates on `SceneSetEntry` resources to control which scenes are active.
-	*   `change_set(new_set_entry: SceneSetEntry)`: This is the core function for transitioning between states (e.g., from a menu to a level). It follows a safe and efficient sequence:
-		1.  It engages a **state lock** to prevent multiple transitions from running at once.
-		2.  It uses the `TransitionManager` to play an "intro" animation.
-		3.  It unloads all scenes of the previous set.
-		4.  It **concurrently loads** all scenes for the new set, waiting for them all to complete for maximum efficiency.
-		5.  Once all new scenes are ready, it plays an "outro" animation to reveal the new state.
+*   **`SceneSetManager`**: The high-level orchestrator for managing game states. It operates on `SceneSetEntry` resources, which define a group of scenes that should be loaded and active at the same time (e.g., a level and its HUD).
+    *   `change_set(new_set: SceneSetEntry)`: This is the primary function for transitioning between game states. It handles the entire sequence: playing an intro transition, unloading all old scenes, loading all new scenes, and finally playing an outro transition.
+    *   `reload_current_set()`: A convenient method to unload and reload all scenes in the currently active set.
 
-*   **`TransitionManager` (`core/managers/transition_manager.gd`):**
-	*   Manages the visual animations between `SceneSet` changes.
-	*   **On-Demand Loading:** The `TransitionManager` does not preload transitions. A transition's scene must be loaded via the `SceneManager` *before* it is set as the active transition.
-	*   `set_current_transition(transition_entry: TransitionEntry) -> bool`: Assigns the transition to be used for the next state change. It validates that the underlying scene is loaded and is a proper `Transition` node.
-	*   `play_intro()` / `play_outro()`: Plays the respective animations on the current transition node. These are typically called only by the `SceneSetManager`.
+*   **`TransitionManager`**: Works directly with the `SceneSetManager` to manage visual transitions between scene sets. It operates on `Transition` nodes (custom `Control` nodes with an `AnimationPlayer`) to play "intro" and "outro" animations.
 
-### 2.4. Transition System
+*   **`EventBus`**: A global publish-subscribe system for decoupled communication.
+    *   **Schema Validation:** Events can be defined with a `data_schema` in their `EventEntry` resource. The `EventBus` will validate the data payload at runtime, preventing bugs by ensuring the correct data structure is always used.
+    *   `publish(event_entry, data)`, `subscribe(event_entry, callable)`, and `wait_for(event_entry)`.
 
-Reusable screen transitions are implemented using a custom `Transition` node.
+*   **`PauseManager`**: A simple manager to handle the global pause state of the game tree (`get_tree().paused`). It can be enabled or disabled based on the properties of the current `SceneSetEntry`.
 
-*   **`Transition` Node (`core/nodes/transition.gd`):**
-	*   A `Control` node designed to host transition animations.
-	*   Requires an `AnimationPlayer` child node with animations named "intro" and "outro".
-	*   The script is marked `@tool` and provides editor warnings if the required `AnimationPlayer` or animations are missing.
+---
 
-### 2.5. Core/Game Directory Split
+## The Core Workflow
 
-The project structure encourages a separation between the core framework and game-specific logic and assets. This split helps in keeping the framework reusable and the game logic organized.
+Here is the typical step-by-step process for using the Qux framework:
 
-*   **`core/` Directory:** Contains foundational, game-agnostic code (managers, base nodes, core resource definitions).
-*   **`game/` Directory:** Intended for all game-specific scenes, scripts, assets, and registry definitions.
+1.  **Define Data as Resources:** Create a new resource file in the `data/` directory. For example, create a new `SceneEntry` resource named `main_menu.tres` inside `data/core/scenes/`. Configure its path to your `.tscn` file and assign it a layer.
+2.  **Let AutoRegistry Work:** The plugin will automatically detect the new file and add a constant to the corresponding registry. In this case, `core/registry/scenes.gd` will now contain `const MAIN_MENU = preload(...)`.
+3.  **Define a Scene Set:** Create a `SceneSetEntry` resource (e.g., `menu_set.tres`) that includes your new `main_menu` scene entry in its array of scenes.
+4.  **Use Managers in Code:** From any script (e.g., a startup script in your main scene), call the `SceneSetManager` to load the entire state:
+    ```gdscript
+    func _ready():
+        # The game will now transition to the main menu scene set.
+        SceneSetManager.change_set(SceneSets.MENU_SET)
+    ```
+5.  **Communicate with Events:** To navigate from the menu to the game, publish an event.
+    ```gdscript
+    # In your main menu button's script
+    func _on_play_button_pressed():
+        EventBus.publish(Events.START_GAME_REQUESTED)
 
-## 3. Project Structure Highlights
+    # In a game state manager script
+    func _ready():
+        EventBus.subscribe(Events.START_GAME_REQUESTED, _on_start_game)
+
+    func _on_start_game(data: Dictionary):
+        SceneSetManager.change_set(SceneSets.LEVEL_1)
+    ```
+
+---
+
+## Project Structure
 
 ```
 qux/
-├── .godot/ # Godot internal project data
+├── .godot/                # Godot's internal project data
 ├── addons/
-│ └── autoregistry/ # AutoRegistry plugin
+│   └── autoregistry/      # The AutoRegistry editor plugin
 ├── core/
-│ ├── definitions/ # Scripts for custom Resource types
-│ ├── managers/ # Autoloaded manager scripts
-│ ├── nodes/ # Custom node scripts
-│ └── registry/ # AUTOGENERATED registry classes for core resources
+│   ├── definitions/       # GDScript classes for custom core Resource types (SceneEntry, etc.)
+│   ├── managers/          # Autoloaded singleton manager scripts
+│   ├── nodes/             # Base scripts for custom node types (e.g., Transition)
+│   ├── registry/          # [AUTOGENERATED] Registry classes for core resources
+│   └── runtime/           # Helper classes for runtime operations (e.g., LoadSceneTask)
 ├── data/
-│ ├── core/ # .tres files for core framework (can have subdirectories)
-│ │ ├── events/
-│ │ ├── layers/
-│ │ └── scenes/
-│ └── game/ # .tres files for game data (can have subdirectories)
-│ └── ...
+│   ├── core/              # .tres files for the core framework (layers, default scenes)
+│   └── game/              # .tres files for your specific game (levels, characters, items)
 ├── game/
-│ └── registry/ # AUTOGENERATED registry classes for game resources
-├── project.godot
-└── README.md
+│   ├── definitions/       # GDScript classes for custom game Resource types
+│   ├── registry/          # [AUTOGENERATED] Registry classes for game resources
+│   └── ...                # Your game's scenes, scripts, and assets
+└── project.godot          # The main project file defining autoloads
 ```
-## 4. Usage
-
-1.  **Define Resources:** Create `.tres` files and organize them in any subdirectory structure you like within `data/core/` or `data/game/`. For example: `data/game/scenes/levels/world_1/hub.tres`.
-2.  **AutoRegistry Generation:** The plugin will automatically generate a corresponding constant, e.g., `GameScenes.LEVELS_WORLD_1_HUB`.
-3.  **Utilize Managers:**
-	*   Load a scene and wait for it: `var my_node = await SceneManager.load_scene(GameScenes.LEVELS_WORLD_1_HUB)`.
-	*   Load a scene in the background: `SceneManager.load_scene_deferred(GameScenes.PLAYER_CHARACTER)`.
-	*   Change the entire game state: `SceneSetManager.change_set(GameSceneSets.CHAPTER_1)`.
-	*   Prepare a transition: First, load its scene (`await SceneManager.load_scene(...)`), then set it (`TransitionManager.set_current_transition(...)`).
-4.  **Event-Driven Communication:**
-	*   Define event types: Create `EventEntry` resources (e.g., `GameEvents.GAMEPLAY_PLAYER_DIED`).
-	*   Publish events: `EventBus.publish(GameEvents.GAMEPLAY_PLAYER_DIED, {"score": 100})`.
-	*   Subscribe to events: `EventBus.subscribe(GameEvents.GAMEPLAY_PLAYER_DIED, on_player_died)`.
-5.  **Develop Game Logic:** Implement game-specific scenes and scripts primarily within the `game/` directory.
