@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="Qux"
+config/name="Memokeeper"
 run/main_scene="uid://eorl60j50wro"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
@@ -26,7 +26,7 @@ PauseManager="*res://core/managers/pause_manager.gd"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/autoregistry/plugin.cfg")
+enabled=PackedStringArray("res://addons/memokeeper/plugin.cfg")
 
 [input]
 
