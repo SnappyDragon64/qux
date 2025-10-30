@@ -2,21 +2,21 @@ extends Node
 
 
 func subscribe(event_entry: EventEntry, callable: Callable) -> void:
-	var signal_name = event_entry.resource_path
+	var signal_name = event_entry.id
 	
 	if not has_signal(signal_name):
 		add_user_signal(signal_name)
 	
-	connect(event_entry.resource_path, callable)
+	connect(event_entry.id, callable)
 
 
 func unsubscribe(event_entry: EventEntry, callable: Callable) -> void:
-	if is_connected(event_entry.resource_path, callable):
-		disconnect(event_entry.resource_path, callable)
+	if is_connected(event_entry.id, callable):
+		disconnect(event_entry.id, callable)
 
 
 func publish(event_entry: EventEntry, data: Dictionary = {}) -> void:
-	var signal_name = event_entry.resource_path
+	var signal_name = event_entry.id
 
 	if not _validate_and_register_event(event_entry, data):
 		return
@@ -25,7 +25,7 @@ func publish(event_entry: EventEntry, data: Dictionary = {}) -> void:
 
 
 func wait_for(event_entry: EventEntry) -> Dictionary:
-	var signal_name = event_entry.resource_path
+	var signal_name = event_entry.id
 
 	if not has_signal(signal_name):
 		add_user_signal(signal_name)
@@ -40,7 +40,7 @@ func wait_for(event_entry: EventEntry) -> Dictionary:
 
 
 func _validate_and_register_event(event_entry: EventEntry, data: Dictionary) -> bool:
-	var signal_name = event_entry.resource_path
+	var signal_name = event_entry.id
 	
 	if event_entry.data_schema:
 		if not _validate_data(event_entry.data_schema, data):

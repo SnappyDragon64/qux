@@ -15,7 +15,7 @@ func change_set(new_set_entry: SceneSetEntry) -> void:
 		push_warning("SceneSetManager: Transition already in progress. Ignoring change set request.")
 		return
 		
-	if _current_set and new_set_entry.resource_path == _current_set.resource_path:
+	if _current_set and new_set_entry.id == _current_set.resource_path:
 		push_warning("SceneSetManager: Scene set '%s' is already loaded." % _current_set.resource_path)
 		return
 		

@@ -9,15 +9,15 @@ func _ready() -> void:
 
 	for layer_entry in all_layers:
 		var canvas_layer := CanvasLayer.new()
-		canvas_layer.name = layer_entry.name
+		canvas_layer.name = layer_entry.id
 		canvas_layer.layer = layer_entry.layer
-		_canvas_layers[layer_entry.resource_path] = canvas_layer
+		_canvas_layers[layer_entry.id] = canvas_layer
 		add_child(canvas_layer)
 
 
 func get_layer(layer_entry: LayerEntry) -> CanvasLayer:
-	if not _canvas_layers.has(layer_entry.resource_path):
-		push_error("LayerManager does not have a registered layer for: %s" % layer_entry.resource_path)
+	if not _canvas_layers.has(layer_entry.id):
+		push_error("LayerManager does not have a registered layer for: %s" % layer_entry.id)
 		return null
 	
-	return _canvas_layers[layer_entry.resource_path]
+	return _canvas_layers[layer_entry.id]

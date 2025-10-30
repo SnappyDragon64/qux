@@ -1,4 +1,4 @@
 class_name LayerEntry extends Resource
 
-@export var name: String
+@export var id: StringName
 @export var layer: int

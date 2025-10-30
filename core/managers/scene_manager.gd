@@ -23,12 +23,12 @@ func unload_scene(scene_entry: SceneEntry) -> UnloadSceneTask:
 
 func get_scene(scene_entry: SceneEntry) -> Node:
 	if not scene_entry: return null
-	return _scenes.get(scene_entry.resource_path, null)
+	return _scenes.get(scene_entry.id, null)
 
 
 func is_scene_loaded(scene_entry: SceneEntry) -> bool:
 	if not scene_entry: return false
-	return _scenes.has(scene_entry.resource_path)
+	return _scenes.has(scene_entry.id)
 
 
 func _load_scene(task: LoadSceneTask) -> void:
@@ -37,11 +37,11 @@ func _load_scene(task: LoadSceneTask) -> void:
 		push_error("SceneManager: Cannot load scene. Invalid SceneEntry provided to task.")
 		return
 	if not entry.layer_entry:
-		push_error("SceneManager: SceneEntry '%s' is missing a LayerEntry." % entry.resource_path)
+		push_error("SceneManager: SceneEntry '%s' is missing a LayerEntry." % entry.id)
 		return
 		
-	if _scenes.has(entry.resource_path):
-		task.result = _scenes[entry.resource_path]
+	if _scenes.has(entry.id):
+		task.result = _scenes[entry.id]
 		task.completed.emit(task.result)
 		return
 
@@ -61,7 +61,7 @@ func _load_scene(task: LoadSceneTask) -> void:
 	canvas_layer.add_child.call_deferred(scene_instance)
 	await scene_instance.ready
 
-	_scenes[entry.resource_path] = scene_instance
+	_scenes[entry.id] = scene_instance
 	
 	task.result = scene_instance
 	task.is_complete = true
@@ -75,13 +75,13 @@ func _unload_scene(task: UnloadSceneTask, scene_entry: SceneEntry) -> void:
 		task.completed.emit()
 		return
 		
-	if not _scenes.has(scene_entry.resource_path):
+	if not _scenes.has(scene_entry.id):
 		task.is_complete = true
 		task.completed.emit()
 		return
 
-	var scene_instance = _scenes.get(scene_entry.resource_path)
-	_scenes.erase(scene_entry.resource_path)
+	var scene_instance = _scenes.get(scene_entry.id)
+	_scenes.erase(scene_entry.id)
 
 	if is_instance_valid(scene_instance):
 		scene_instance.queue_free()
