@@ -13,17 +13,17 @@ func set_current_transition(transition_entry: TransitionEntry) -> bool:
 		return true
 
 	if not transition_entry.scene_entry:
-		push_error("TransitionManager: Cannot set transition. The provided TransitionEntry '%s' has no SceneEntry defined." % transition_entry.resource_path)
+		push_error("TransitionManager: Cannot set transition. The provided TransitionEntry '%s' has no SceneEntry defined." % transition_entry.id)
 		return false
 
 	if not SceneManager.is_scene_loaded(transition_entry.scene_entry):
-		push_error("TransitionManager: Cannot set transition '%s'. Its scene has not been loaded by SceneManager." % transition_entry.resource_path)
+		push_error("TransitionManager: Cannot set transition '%s'. Its scene has not been loaded by SceneManager." % transition_entry.id)
 		return false
 
 	var scene_instance = SceneManager.get_scene(transition_entry.scene_entry)
 	if not scene_instance is Transition:
 		var type_str = "null" if not scene_instance else scene_instance.get_class()
-		push_error("TransitionManager: Cannot set transition '%s'. Its scene node is a '%s', not a 'Transition'." % [transition_entry.resource_path, type_str])
+		push_error("TransitionManager: Cannot set transition '%s'. Its scene node is a '%s', not a 'Transition'." % [transition_entry.id, type_str])
 		return false
 
 	_current_transition = scene_instance
